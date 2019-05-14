@@ -180,6 +180,10 @@ public struct YPConfigLibrary {
 
     /// Allow to skip the selections gallery when selecting the multiple media items. Defaults to false.
     public var skipSelectionsGallery = false
+
+    // 📝 Forked by fumiyasac (2019/05/15)
+    /// Allow to select only multiple. Defaults to false.
+    public var forceMultipleSelect = false
 }
 
 /// Encapsulates video specific settings.

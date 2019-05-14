@@ -47,8 +47,13 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     private func resetMultipleSelection() {
         selection.removeAll()
         currentlySelectedIndex = 0
-        multipleSelectionEnabled = false
-        v.assetViewContainer.setMultipleSelectionMode(on: false)
+
+        // 📝 Forked by fumiyasac (2019/05/15)
+        // If `forceMultipleSelect` is true, user only selects multiple select.
+        let shouldForceMultipleSelect = YPConfig.library.forceMultipleSelect
+        multipleSelectionEnabled = shouldForceMultipleSelect
+        v.assetViewContainer.setMultipleSelectionMode(on: shouldForceMultipleSelect)
+
         delegate?.libraryViewDidToggleMultipleSelection(enabled: false)
         checkLimit()
     }
@@ -80,7 +85,11 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         }
         scrollToTop()
 
-        v.assetViewContainer.multipleSelectionButton.isHidden = !(YPConfig.library.maxNumberOfItems > 1)
+        // 📝 Forked by fumiyasac (2019/05/15)
+        // Add Condition `forceMultipleSelect` is false.
+        let shouldHideMultipleSelectionButton: Bool = (YPConfig.library.maxNumberOfItems == 1 && !YPConfig.library.forceMultipleSelect)
+        v.assetViewContainer.multipleSelectionButton.isHidden = shouldHideMultipleSelectionButton
+
         v.maxNumberWarningLabel.text = String(format: YPConfig.wordings.warningMaxItemsLimit, YPConfig.library.maxNumberOfItems)
 
         let mapped: [YPLibrarySelection?] = selected.map {
@@ -161,9 +170,13 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         if !YPConfig.library.onlySquare && v.assetZoomableView.contentSize == CGSize(width: 0, height: 0) {
             v.assetZoomableView.setZoomScale(1, animated: false)
         }
-        
+
         // Activate multiple selection when using `minNumberOfItems`
-        if YPConfig.library.minNumberOfItems > 1 {
+        // 📝 Forked by fumiyasac (2019/05/15)
+        // Add Condition `forceMultipleSelect` is false.
+        let shouldForceMultipleSelect = (YPConfig.library.forceMultipleSelect == true)
+        let shouldChangeMultipleSelect = (YPConfig.library.minNumberOfItems > 1 && !YPConfig.library.forceMultipleSelect == false)
+        if shouldForceMultipleSelect || shouldChangeMultipleSelect {
             multipleSelectionButtonTapped()
         }
     }
@@ -190,12 +203,21 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     @objc
     func multipleSelectionButtonTapped() {
         
-        // Prevent desactivating multiple selection when using `minNumberOfItems`
-        if YPConfig.library.minNumberOfItems > 1 && multipleSelectionEnabled {
-            return
+        // 📝 Forked by fumiyasac (2019/05/15)
+        // If `forceMultipleSelect` is true, prevent desactivating multiple selection too.
+        if YPConfig.library.forceMultipleSelect {
+            multipleSelectionEnabled = true
+
+        // If `forceMultipleSelect` is false, judge multiple selection state before forked.
+        } else {
+
+            // Prevent desactivating multiple selection when using `minNumberOfItems`
+            if YPConfig.library.minNumberOfItems > 1 && multipleSelectionEnabled {
+                return
+            } else {
+                multipleSelectionEnabled = !multipleSelectionEnabled
+            }
         }
-        
-        multipleSelectionEnabled = !multipleSelectionEnabled
 
         if multipleSelectionEnabled {
             if selection.isEmpty {

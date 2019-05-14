@@ -64,8 +64,9 @@ public class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         
         delegate = self
         
-        // Force Library only when using `minNumberOfItems`.
-        if YPConfig.library.minNumberOfItems > 1 {
+        // 📝 Forked by fumiyasac (2019/05/15)
+        // Force Library only when using `minNumberOfItems` or `forceMultipleSelect` is true.
+        if YPConfig.library.minNumberOfItems > 1 || YPConfig.library.forceMultipleSelect {
             YPImagePickerConfiguration.shared.screens = [.library]
         }
         

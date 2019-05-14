@@ -142,11 +142,20 @@ class ExampleViewController: UIViewController {
         /* Defines if the bottom bar should be hidden when showing the picker. Default is false */
         config.hidesBottomBar = false
 
-        config.library.maxNumberOfItems = 5
-        
+        // 📝 Forked by fumiyasac (2019/05/15)
+        /// If you allow to force multiple select, values should set like this.
+        config.library.minNumberOfItems = 1
+        config.library.maxNumberOfItems = 4
+        config.library.forceMultipleSelect = true
+
+        // 📝 Forked by fumiyasac (2019/05/15)
+        /// If you deny to force multiple select, values should set like this.
+        //config.library.minNumberOfItems = 1
+        //config.library.maxNumberOfItems = 1
+        //config.library.forceMultipleSelect = false
+
         /* Disable scroll to change between mode */
         // config.isScrollToChangeModesEnabled = false
-//        config.library.minNumberOfItems = 2
         
         /* Skip selection gallery after multiple selections */
         // config.library.skipSelectionsGallery = true
