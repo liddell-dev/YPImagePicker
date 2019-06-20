@@ -8,13 +8,16 @@
 
 import UIKit
 
-struct YPLibrarySelection {
-    let index: Int
-    var cropRect: CGRect?
-    var scrollViewContentOffset: CGPoint?
-    var scrollViewZoomScale: CGFloat?
-    let assetIdentifier: String
-    
+// 📝 Forked by fumiyasac (2019/06/19)
+// 書き換えが発生するのでInternalではなくPublicで定義する
+
+public struct YPLibrarySelection {
+    public let index: Int
+    public var cropRect: CGRect?
+    public var scrollViewContentOffset: CGPoint?
+    public var scrollViewZoomScale: CGFloat?
+    public let assetIdentifier: String
+
     init(index: Int,
          cropRect: CGRect? = nil,
          scrollViewContentOffset: CGPoint? = nil,

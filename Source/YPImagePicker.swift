@@ -35,7 +35,7 @@ open class YPImagePicker: UINavigationController {
     
     let loadingView = YPLoadingView()
     private let picker: YPPickerVC!
-    
+
     /// Get a YPImagePicker instance with the default configuration.
     public convenience init() {
         self.init(configuration: YPImagePickerConfiguration.shared)
@@ -48,7 +48,16 @@ open class YPImagePicker: UINavigationController {
         super.init(nibName: nil, bundle: nil)
         picker.imagePickerDelegate = self
     }
-    
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // イニシャライザの引数に現在YPImagePickerから選択している画像の配列を引き渡すように変更
+    public init(selected: [YPMediaItem], configuration: YPImagePickerConfiguration) {
+        YPImagePickerConfiguration.shared = configuration
+        picker = YPPickerVC(selected: selected)
+        super.init(nibName: nil, bundle: nil)
+        picker.imagePickerDelegate = self
+    }
+
     public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

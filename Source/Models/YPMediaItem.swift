@@ -20,13 +20,20 @@ public class YPMediaPhoto {
     public let fromCamera: Bool
     public let exifMeta : [String : Any]?
     public var asset: PHAsset?
-    
-    public init(image: UIImage, exifMeta : [String : Any]? = nil, fromCamera: Bool = false, asset: PHAsset? = nil) {
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択されているファイル（写真）内容を保持するための変数
+    public var selection: YPLibrarySelection?
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択されているファイル（写真）内容を保持するための変数の初期化をイニシャライザへ追加
+    public init(image: UIImage, exifMeta : [String : Any]? = nil, fromCamera: Bool = false, asset: PHAsset? = nil, selection: YPLibrarySelection? = nil) {
         self.originalImage = image
         self.modifiedImage = nil
         self.fromCamera = fromCamera
         self.exifMeta = exifMeta
         self.asset = asset
+        self.selection = selection
     }
 }
 
@@ -37,11 +44,18 @@ public class YPMediaVideo {
     public let fromCamera: Bool
     public var asset: PHAsset?
 
-    public init(thumbnail: UIImage, videoURL: URL, fromCamera: Bool = false, asset: PHAsset? = nil) {
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択されているファイル（動画）内容を保持するための変数
+    public var selection: YPLibrarySelection?
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択されているファイル（動画）内容を保持するための変数の初期化をイニシャライザへ追加
+    public init(thumbnail: UIImage, videoURL: URL, fromCamera: Bool = false, asset: PHAsset? = nil, selection: YPLibrarySelection? = nil) {
         self.thumbnail = thumbnail
         self.url = videoURL
         self.fromCamera = fromCamera
         self.asset = asset
+        self.selection = selection
     }
 }
 
