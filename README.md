@@ -2,6 +2,22 @@
 
 <img src="https://raw.githubusercontent.com/Yummypets/YPImagePicker/master/Images/visual.jpg" width="400px" >
 
+## MEMO
+
++ 2019.06.19
+
+強制的に画像を複数選択できるモードをONにする`forceMultipleSelect`をForkして追加しました。（※ 画像選択のみこのモードが有効になります！）
+
+__Configuration Example__
+
+下記の様な形でConfigurationを設定すると、強制的に複数選択状態にすることができます。（※ minNumberOfItems < maxNumberOfItemsに必ずする点にご注意を！）
+
+```swift
+config.library.minNumberOfItems = 1
+config.library.maxNumberOfItems = 4
+config.library.forceMultipleSelect = true
+```
+
 ## YPImagePicker
 
 YPImagePicker is an instagram-like photo/video picker for iOS written in pure Swift. It is feature-rich and highly customizable to match your App's requirements.
