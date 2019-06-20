@@ -142,7 +142,7 @@ class ExampleViewController: UIViewController {
         /* Defines if the bottom bar should be hidden when showing the picker. Default is false */
         config.hidesBottomBar = false
 
-        config.library.maxNumberOfItems = 5
+//        config.library.maxNumberOfItems = 5
         
         /* Disable scroll to change between mode */
         // config.isScrollToChangeModesEnabled = false
@@ -169,7 +169,36 @@ class ExampleViewController: UIViewController {
         //
         //config.library.options = options
 
-        let picker = YPImagePicker(configuration: config)
+        // 📝 Forked by fumiyasac (2019/06/19)
+        //
+        config.library.skipSelectionsGallery = true
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        //
+        config.showsPhotoFilters = false
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        //
+        config.showsCrop = .none
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        /// If you allow to force multiple select, values should set like this.
+
+        /* --- 以下ForSure(SURELIST)で利用する設定 --- */
+        // UseCase1: 1枚ずつの画像を設定する場合
+        /*
+        config.library.minNumberOfItems = 1
+        config.library.maxNumberOfItems = 1
+        config.library.forceMultipleSelect = false
+        */
+        // UseCase2: 複数枚の画像を設定する場合
+        config.library.minNumberOfItems = 1
+        config.library.maxNumberOfItems = 4
+        config.library.forceMultipleSelect = true
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // Picker表示の設定例の調整
+        let picker = YPImagePicker(selected: selectedItems, configuration: config)
 
         /* Change configuration directly */
         // YPImagePickerConfiguration.shared.wordings.libraryTitle = "Gallery2"

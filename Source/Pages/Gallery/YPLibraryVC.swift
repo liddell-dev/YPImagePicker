@@ -10,7 +10,11 @@ import UIKit
 import Photos
 
 public class YPLibraryVC: UIViewController, YPPermissionCheckable {
-    
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択されているファイル内容を保持するための変数
+    private var selected: [YPMediaItem] = []
+
     internal weak var delegate: YPLibraryViewDelegate?
     internal var v: YPLibraryView!
     internal var isProcessing = false // true if video or image is in processing state
@@ -23,7 +27,14 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     internal let panGestureHelper = PanGestureHelper()
 
     // MARK: - Init
-    
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択されている内容を特定したい場合に利用するイニシャライザ
+    public convenience init(selected: [YPMediaItem]) {
+        self.init()
+        self.selected = selected
+    }
+
     public required init() {
         super.init(nibName: nil, bundle: nil)
         title = YPConfig.wordings.libraryTitle
@@ -37,12 +48,18 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         title = album.title
         mediaManager.collection = album.collection
         currentlySelectedIndex = 0
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // ナビゲーションバーから表示対象のアルバムを選択する際にも「強制選択フラグ」を許可する考慮の追加
+        let shouldForceMultipleSelect = YPConfig.library.forceMultipleSelect
+        multipleSelectionEnabled = shouldForceMultipleSelect
+
         if !multipleSelectionEnabled {
             selection.removeAll()
         }
         refreshMediaRequest()
     }
-    
+
     func initialize() {
         mediaManager.initialize()
         mediaManager.v = v
@@ -50,18 +67,68 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         if mediaManager.fetchResult != nil {
             return
         }
-        
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // 初期化時に「強制選択フラグ」を許可する考慮の追加
+        let shouldForceMultipleSelect = YPConfig.library.forceMultipleSelect
+        multipleSelectionEnabled = shouldForceMultipleSelect
+
         setupCollectionView()
         registerForLibraryChanges()
         panGestureHelper.registerForPanGesture(on: v)
         registerForTapOnPreview()
         refreshMediaRequest()
 
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // 初期化時に「強制選択フラグ」を許可する考慮の追加
         if YPConfig.library.defaultMultipleSelection {
             multipleSelectionButtonTapped()
         }
-        v.assetViewContainer.multipleSelectionButton.isHidden = !(YPConfig.library.maxNumberOfItems > 1)
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // 初期化時に「強制選択フラグ」を許可している場合の画像の複数選択切り替えボタン表示に対する考慮
+        let shouldHideMultipleSelectionButton: Bool = (YPConfig.library.maxNumberOfItems == 1 && !YPConfig.library.forceMultipleSelect)
+        v.assetViewContainer.multipleSelectionButton.isHidden = shouldHideMultipleSelectionButton
+
         v.maxNumberWarningLabel.text = String(format: YPConfig.wordings.warningMaxItemsLimit, YPConfig.library.maxNumberOfItems)
+
+        let mapped: [YPLibrarySelection?] = selected.map {
+            switch $0 {
+            case let .photo(p):
+                guard let asset = p.asset else { return nil }
+                let idx = mediaManager.fetchResult.index(of: asset)
+                if idx == NSNotFound { return nil }
+                let selection = YPLibrarySelection(index: idx,
+                                                   cropRect: p.selection?.cropRect,
+                                                   scrollViewContentOffset: p.selection?.scrollViewContentOffset,
+                                                   scrollViewZoomScale: p.selection?.scrollViewZoomScale,
+                                                   assetIdentifier: p.asset!.localIdentifier
+                )
+                return selection
+            case .video:
+                return nil
+            }
+        }
+        let filtered = mapped.filter { $0 != nil } as? [YPLibrarySelection]
+        if let filtered = filtered {
+            selection = filtered
+        }
+        switch selection.count {
+        case 1 :
+            currentlySelectedIndex = selection[0].index
+            if let asset = selected.singlePhoto?.asset { changeAsset(asset) }
+        case 2... :
+            currentlySelectedIndex = selection[0].index
+            if let asset = selected.singlePhoto?.asset { changeAsset(asset) }
+            DispatchQueue.main.async {
+                self.multipleSelectionButtonTapped()
+            }
+        default:
+            changeAsset(mediaManager.fetchResult[0])
+            v.collectionView.selectItem(at: IndexPath(row: 0, section: 0),
+                                        animated: false,
+                                        scrollPosition: UICollectionView.ScrollPosition())
+        }
     }
     
     // MARK: - View Lifecycle
@@ -104,9 +171,13 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         if !YPConfig.library.onlySquare && v.assetZoomableView.contentSize == CGSize(width: 0, height: 0) {
             v.assetZoomableView.setZoomScale(1, animated: false)
         }
-        
+
         // Activate multiple selection when using `minNumberOfItems`
-        if YPConfig.library.minNumberOfItems > 1 {
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // 画面表示時に「強制選択フラグ」を許可している場合の画像の複数選択切り替えボタン表示に対する考慮
+        let shouldForceMultipleSelect = (YPConfig.library.forceMultipleSelect == true)
+        let shouldChangeMultipleSelect = (YPConfig.library.minNumberOfItems > 1 && !YPConfig.library.forceMultipleSelect == false)
+        if shouldForceMultipleSelect || shouldChangeMultipleSelect {
             multipleSelectionButtonTapped()
         }
     }
@@ -132,28 +203,32 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
 
     @objc
     func multipleSelectionButtonTapped() {
-        
+
         if !multipleSelectionEnabled {
             selection.removeAll()
         }
-        
-        // Prevent desactivating multiple selection when using `minNumberOfItems`
-        if YPConfig.library.minNumberOfItems > 1 && multipleSelectionEnabled {
-            return
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // 下記のユースケースによって分岐できる形へ変更
+        // UseCase1: 強制的に複数選択ができる形にするためのフラグをtrueとしている場合
+        if YPConfig.library.forceMultipleSelect {
+            multipleSelectionEnabled = true
+        // UseCase2: 強制的に複数選択ができる形にするためのフラグをfalseとしている場合
+        } else {
+            // Prevent desactivating multiple selection when using `minNumberOfItems`
+            if YPConfig.library.minNumberOfItems > 1 && multipleSelectionEnabled {
+                return
+            } else {
+                 multipleSelectionEnabled = !multipleSelectionEnabled
+            }
         }
-        
-        multipleSelectionEnabled = !multipleSelectionEnabled
 
         if multipleSelectionEnabled {
             if selection.isEmpty {
                 let asset = mediaManager.fetchResult[currentlySelectedIndex]
-                selection = [
-                    YPLibrarySelection(index: currentlySelectedIndex,
-                                       cropRect: v.currentCropRect(),
-                                       scrollViewContentOffset: v.assetZoomableView!.contentOffset,
-                                       scrollViewZoomScale: v.assetZoomableView!.zoomScale,
-                                       assetIdentifier: asset.localIdentifier)
-                ]
+                // 📝 Forked by fumiyasac (2019/06/19)
+                // 現在選択しているアセットを定義する処理をメソッドに切り出す対応
+                selection = [currentSelection(asset: asset)]
             }
         } else {
             selection.removeAll()
@@ -165,7 +240,17 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         checkLimit()
         delegate?.libraryViewDidToggleMultipleSelection(enabled: multipleSelectionEnabled)
     }
-    
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択しているアセットを定義する処理
+    func currentSelection(asset: PHAsset) -> YPLibrarySelection {
+        return YPLibrarySelection(index: currentlySelectedIndex,
+                                  cropRect: v.currentCropRect(),
+                                  scrollViewContentOffset: v.assetZoomableView!.contentOffset,
+                                  scrollViewZoomScale: v.assetZoomableView!.zoomScale,
+                                  assetIdentifier: asset.localIdentifier)
+    }
+
     // MARK: - Tap Preview
     
     func registerForTapOnPreview() {
@@ -225,28 +310,23 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                     block(s == .authorized)
                 }
             }
+        default:
+            break
         }
     }
     
     func refreshMediaRequest() {
-        
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // 画像選択画面を開いた場合の振る舞いを変更しています。
         let options = buildPHFetchOptions()
-        
         if let collection = mediaManager.collection {
             mediaManager.fetchResult = PHAsset.fetchAssets(in: collection, options: options)
         } else {
             mediaManager.fetchResult = PHAsset.fetchAssets(with: options)
         }
-                
+
         if mediaManager.fetchResult.count > 0 {
-            changeAsset(mediaManager.fetchResult[0])
             v.collectionView.reloadData()
-            v.collectionView.selectItem(at: IndexPath(row: 0, section: 0),
-                                             animated: false,
-                                             scrollPosition: UICollectionView.ScrollPosition())
-            if !multipleSelectionEnabled {
-                addToSelection(indexPath: IndexPath(row: 0, section: 0))
-            }
         } else {
             delegate?.noPhotosForOptions()
         }
@@ -301,8 +381,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                                                   mediaManager: self.mediaManager,
                                                   storedCropPosition: self.fetchStoredCrop(),
                                                   completion: completion)
-            case .audio, .unknown:
-                ()
+            default:
+                break
             }
         }
     }
@@ -417,14 +497,25 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 // Fill result media items array
                 var resultMediaItems: [YPMediaItem] = []
                 let asyncGroup = DispatchGroup()
-                
-                for asset in selectedAssets {
+
+                // 📝 Forked by fumiyasac (2019/06/19)
+                // 現在選択しているアセットに合致するかを判定できる様に変更
+                for (specifiedIndex, asset) in selectedAssets.enumerated() {
                     asyncGroup.enter()
                     
                     switch asset.asset.mediaType {
                     case .image:
                         self.fetchImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, exifMeta in
-                            let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(), exifMeta: exifMeta, asset: asset.asset)
+
+                            // 📝 Forked by fumiyasac (2019/06/19)
+                            // YPMediaPhotoの変更に伴う改修
+                            let photo = YPMediaPhoto(
+                                image: image.resizedImageIfNeeded(),
+                                exifMeta: exifMeta,
+                                asset: asset.asset,
+                                selection: self.selection[specifiedIndex]
+                            )
+
                             resultMediaItems.append(YPMediaItem.photo(p: photo))
                             asyncGroup.leave()
                         }
@@ -461,14 +552,21 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                     self.fetchImageAndCrop(for: asset) { image, exifMeta in
                         DispatchQueue.main.async {
                             self.delegate?.libraryViewFinishedLoading()
-                            let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
-                                                     exifMeta: exifMeta,
-                                                     asset: asset)
+
+                            // 📝 Forked by fumiyasac (2019/06/19)
+                            // YPMediaPhotoの変更に伴う改修
+                            let photo = YPMediaPhoto(
+                                image: image.resizedImageIfNeeded(),
+                                exifMeta: exifMeta,
+                                asset: asset,
+                                selection: self.currentSelection(asset: asset)
+                            )
+
                             photoCallback(photo)
                         }
                     }
-                case .audio, .unknown:
-                    return
+                default:
+                    break
                 }
             }
         }

@@ -15,13 +15,17 @@ protocol ImagePickerDelegate: AnyObject {
 }
 
 open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
-    
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // 現在選択されている画像を引き当てる際に利用する変数を追加
+    private var selected: [YPMediaItem] = []
+
     let albumsManager = YPAlbumsManager()
     var shouldHideStatusBar = false
     var initialStatusBarHidden = false
     weak var imagePickerDelegate: ImagePickerDelegate?
     
-    override open    var prefersStatusBarHidden: Bool {
+    override open var prefersStatusBarHidden: Bool {
         return (shouldHideStatusBar || initialStatusBarHidden) && YPConfig.hidesStatusBar
     }
     
@@ -42,22 +46,38 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     var mode = Mode.camera
     
     var capturedImage: UIImage?
-    
+
+    // 📝 Forked by fumiyasac (2019/06/19)
+    // YPImagePickerを初期化する際に引数に配列を渡すことで、新規画像選択時に「どの画像を現在選択しているか？」という点を明確化できるようにする
+    public init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+    public init(selected: [YPMediaItem]) {
+        self.selected = selected
+        super.init(nibName: nil, bundle: nil)
+    }
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     open override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = UIColor(r: 247, g: 247, b: 247)
         
         delegate = self
-        
-        // Force Library only when using `minNumberOfItems`.
-        if YPConfig.library.minNumberOfItems > 1 {
+
+        // 📝 Forked by fumiyasac (2019/06/19)
+        // ※暫定対応：現在は複数選択モードをアプリ側で選択した場合は画像選択しかできないようにしています。
+        if YPConfig.library.minNumberOfItems > 1 || YPConfig.library.forceMultipleSelect {
             YPImagePickerConfiguration.shared.screens = [.library]
         }
-        
+
         // Library
         if YPConfig.screens.contains(.library) {
-            libraryVC = YPLibraryVC()
+            // 📝 Forked by fumiyasac (2019/06/19)
+            // YPLibraryVCインスタンスを作成時の選択されたアイテムを格納した配列を引数で渡すようにする。
+            libraryVC = YPLibraryVC(selected: selected)
             libraryVC?.delegate = self
         }
         
@@ -65,8 +85,10 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         if YPConfig.screens.contains(.photo) {
             cameraVC = YPCameraVC()
             cameraVC?.didCapturePhoto = { [weak self] img in
-                self?.didSelectItems?([YPMediaItem.photo(p: YPMediaPhoto(image: img,
-                                                                        fromCamera: true))])
+                self?.didSelectItems?(
+                    [YPMediaItem.photo(p: YPMediaPhoto(image: img,
+                                                       fromCamera: true))]
+                )
             }
         }
         
@@ -74,10 +96,11 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         if YPConfig.screens.contains(.video) {
             videoVC = YPVideoCaptureVC()
             videoVC?.didCaptureVideo = { [weak self] videoURL in
-                self?.didSelectItems?([YPMediaItem
-                    .video(v: YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
-                                           videoURL: videoURL,
-                                           fromCamera: true))])
+                self?.didSelectItems?(
+                    [YPMediaItem.video(v: YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
+                                                       videoURL: videoURL,
+                                                       fromCamera: true))]
+                )
             }
         }
         
