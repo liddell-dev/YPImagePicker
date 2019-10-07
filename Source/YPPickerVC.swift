@@ -225,6 +225,11 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             self?.setTitleViewWithTitle(aTitle: album.title)
             self?.dismiss(animated: true, completion: nil)
         }
+        // 📝 Forked by fumiyasac (2019/10/07)
+        // Add modalPresentationStyle property is '.fullScreen' above iOS13.
+        if #available(iOS 13.0, *) {
+            navVC.modalPresentationStyle = .fullScreen
+        }
         present(navVC, animated: true, completion: nil)
     }
     

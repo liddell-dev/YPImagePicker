@@ -8,6 +8,10 @@
 
 強制的に画像を複数選択できるモードをONにする`forceMultipleSelect`をForkして追加しました。（※ 画像選択のみこのモードが有効になります！）
 
++ 2019.10.07
+
+最低限の仕様を変更しない形でiOS13への暫定対応をしました。
+
 __Configuration Example__
 
 下記の様な形でConfigurationを設定すると、強制的に複数選択状態にすることができます。（※ minNumberOfItems < maxNumberOfItemsに必ずする点にご注意を！）
