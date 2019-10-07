@@ -55,6 +55,11 @@ class ExampleViewController: UIViewController {
                 g.dismiss(animated: true, completion: nil)
             }
             let navC = UINavigationController(rootViewController: gallery)
+            // 📝 Forked by fumiyasac (2019/10/07)
+            // Add modalPresentationStyle property is '.fullScreen' above iOS13.
+            if #available(iOS 13.0, *) {
+                navC.modalPresentationStyle = .fullScreen
+            }
             self.present(navC, animated: true, completion: nil)
         } else {
             print("No items selected yet.")
@@ -70,7 +75,7 @@ class ExampleViewController: UIViewController {
         /* Uncomment and play around with the configuration 👨‍🔬 🚀 */
 
         /* Set this to true if you want to force the  library output to be a squared image. Defaults to false */
-//         config.library.onlySquare = true
+        config.library.onlySquare = true
 
         /* Set this to true if you want to force the camera output to be a squared image. Defaults to true */
         // config.onlySquareImagesFromCamera = false
@@ -125,7 +130,7 @@ class ExampleViewController: UIViewController {
         config.video.libraryTimeLimit = 500.0
 
         /* Adds a Crop step in the photo taking process, after filters. Defaults to .none */
-        config.showsCrop = .rectangle(ratio: (16/9))
+        //config.showsCrop = .rectangle(ratio: (16/9))
 
         /* Defines the overlay view for the camera. Defaults to UIView(). */
         // let overlayView = UIView()
@@ -209,6 +214,11 @@ class ExampleViewController: UIViewController {
                     playerVC.player = player
                 
                     picker.dismiss(animated: true, completion: { [weak self] in
+                        // 📝 Forked by fumiyasac (2019/10/07)
+                        // Add modalPresentationStyle property is '.fullScreen' above iOS13.
+                        if #available(iOS 13.0, *) {
+                            playerVC.modalPresentationStyle = .fullScreen
+                        }
                         self?.present(playerVC, animated: true, completion: nil)
                         print("😀 \(String(describing: self?.resolutionForLocalVideo(url: assetURL)!))")
                     })
@@ -240,7 +250,11 @@ class ExampleViewController: UIViewController {
         //        print("😀 \(String(describing: self?.resolutionForLocalVideo(url: assetURL)!))")
         //    })
         //}
-
+        // 📝 Forked by fumiyasac (2019/10/07)
+        // Add modalPresentationStyle property is '.fullScreen' above iOS13.
+        if #available(iOS 13.0, *) {
+            picker.modalPresentationStyle = .fullScreen
+        }
         present(picker, animated: true, completion: nil)
     }
 }
