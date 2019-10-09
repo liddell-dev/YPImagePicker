@@ -21,11 +21,20 @@ final class YPLibraryView: UIView {
     @IBOutlet weak var assetZoomableView: YPAssetZoomableView!
     @IBOutlet weak var assetViewContainer: YPAssetViewContainer!
     @IBOutlet weak var assetViewContainerConstraintTop: NSLayoutConstraint!
-    
+
+    // 📝 Forked by fumiyasac (2019/10/09)
+    // リサイズエリアの比率を反映するためにAutoLayoutを関連づける
+    @IBOutlet weak var imageCropViewConstraintHeight: NSLayoutConstraint!
+    @IBOutlet weak var imageCropViewConstraintWidth: NSLayoutConstraint!
+
     let maxNumberWarningView = UIView()
     let maxNumberWarningLabel = UILabel()
     let progressView = UIProgressView()
     let line = UIView()
+    
+    // 📝 Forked by fumiyasac (2019/10/09)
+    // YPConfig.library.shouldForsureCoodinateRatioの値を利用できるようにする
+    public var shouldForsureCoodinateRatio: Bool = YPConfig.library.shouldForsureCoodinateRatio
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -43,8 +52,19 @@ final class YPLibraryView: UIView {
         
         setupMaxNumberOfItemsView()
         setupProgressBarView()
+        setupImageCropViewSize()
     }
     
+    // 📝 Forked by fumiyasac (2019/10/09)
+    // リサイズエリアの比率を反映する
+    
+    fileprivate func setupImageCropViewSize() {
+        let width = UIScreen.main.bounds.width
+        let height = width * (shouldForsureCoodinateRatio ? 1.333 : 1.0)
+        imageCropViewConstraintWidth.constant = width
+        imageCropViewConstraintHeight.constant = height
+    }
+
     /// At the bottom there is a view that is visible when selected a limit of items with multiple selection
     func setupMaxNumberOfItemsView() {
         // View Hierarchy

@@ -184,18 +184,26 @@ class ExampleViewController: UIViewController {
         // 📝 Forked by fumiyasac (2019/06/19)
         /// If you allow to force multiple select, values should set like this.
 
-        /* --- 以下ForSure(SURELIST/CONSUMER)利用する設定 --- */
+
+
+
+        /* ----------- ↓↓↓ 以下ForSure(SURELIST/CONSUMER)利用する設定 ↓↓↓ ----------- */
         // UseCase1: 1枚ずつの画像を設定する場合
         // ※ ConsumerではUsecase1しかない点に注意
-        /*
-        config.library.minNumberOfItems = 1
-        config.library.maxNumberOfItems = 1
-        config.library.forceMultipleSelect = false
-        */
+//        config.library.minNumberOfItems = 1
+//        config.library.maxNumberOfItems = 1
+//        config.library.forceMultipleSelect = false
+//        config.library.shouldForsureCoodinateRatio = false
+
         // UseCase2: 複数枚の画像を設定する場合
         config.library.minNumberOfItems = 1
         config.library.maxNumberOfItems = 4
-        config.library.forceMultipleSelect = true
+        config.library.forceMultipleSelect = true // config.library.forceMultipleSelect = false
+        config.library.shouldForsureCoodinateRatio = true
+        /* ----------- ↑↑↑ ForSure(SURELIST/CONSUMER)利用する設定 ↑↑↑ ----------- */
+
+        
+
 
         // 📝 Forked by fumiyasac (2019/06/19)
         // Picker表示の設定例の調整

@@ -191,6 +191,11 @@ public struct YPConfigLibrary {
     // 強制的に複数選択ができる形にするためのフラグ
     // 注意：この定数をtrueとした場合が画像選択処理のみ許可しています。
     public var forceMultipleSelect = false
+
+    // 📝 Forked by fumiyasac (2019/10/09)
+    // シュアリストのコーディネート写真で利用するかのフラグ
+    // 注意：この定数をtrueとした場合は縦横比が4:3となります。
+    public var shouldForsureCoodinateRatio = false
 }
 
 /// Encapsulates video specific settings.
