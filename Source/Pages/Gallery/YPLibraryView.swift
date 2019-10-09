@@ -6,6 +6,9 @@
 //  Copyright © 2015 Yummypets. All rights reserved.
 //
 
+// 📝 Forked by fumiyasac (2019/10/09)
+// YPLibraryView.xibの縦横比を Vertical : Horizontal = 4 : 3としました。
+
 import UIKit
 import Stevia
 import Photos

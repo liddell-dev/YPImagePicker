@@ -139,24 +139,33 @@ final class YPAssetZoomableView: UIScrollView {
         var aspectRatio: CGFloat = 1
         var zoomScale: CGFloat = 1
 
-        if w > h { // Landscape
-            aspectRatio = h / w
+        // 📝 Forked by fumiyasac (2019/10/09)
+        // 切り取りエリアの縦横比を4:3へ変更したことに伴う調整対応
+        let heightRatioPrameter: CGFloat = 1.333
+
+        // MEMO: Case1. 横向き画像を読み込んだ場合の調整対応
+        if w > h {
+            aspectRatio = h / w  * heightRatioPrameter
             view.frame.size.width = screenWidth
             view.frame.size.height = screenWidth * aspectRatio
-        } else if h > w { // Portrait
+
+        // MEMO: Case2. 縦向き画像を読み込んだ場合の調整対応
+        } else if h > w {
             aspectRatio = w / h
             view.frame.size.width = screenWidth * aspectRatio
             view.frame.size.height = screenWidth
-            
             if let minWidth = minWidth {
                 let k = minWidth / screenWidth
-                zoomScale = (h / w) * k
+                zoomScale = (h / w) * k * heightRatioPrameter
             }
-        } else { // Square
+
+        // MEMO: Case3. 正方形画像を読み込んだ場合の調整対応
+        } else {
             view.frame.size.width = screenWidth
             view.frame.size.height = screenWidth
+            zoomScale = heightRatioPrameter
         }
-        
+
         // Centering image view
         view.center = center
         centerAssetView()
