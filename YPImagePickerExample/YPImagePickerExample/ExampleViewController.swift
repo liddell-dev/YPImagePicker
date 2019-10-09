@@ -184,8 +184,9 @@ class ExampleViewController: UIViewController {
         // 📝 Forked by fumiyasac (2019/06/19)
         /// If you allow to force multiple select, values should set like this.
 
-        /* --- 以下ForSure(SURELIST)で利用する設定 --- */
+        /* --- 以下ForSure(SURELIST/CONSUMER)利用する設定 --- */
         // UseCase1: 1枚ずつの画像を設定する場合
+        // ※ ConsumerではUsecase1しかない点に注意
         /*
         config.library.minNumberOfItems = 1
         config.library.maxNumberOfItems = 1

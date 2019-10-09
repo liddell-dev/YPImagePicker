@@ -225,10 +225,17 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
 
         if multipleSelectionEnabled {
             if selection.isEmpty {
-                let asset = mediaManager.fetchResult[currentlySelectedIndex]
-                // 📝 Forked by fumiyasac (2019/06/19)
-                // 現在選択しているアセットを定義する処理をメソッドに切り出す対応
-                selection = [currentSelection(asset: asset)]
+                // 📝 Forked by fumiyasac (2019/10/09)
+                // mediaManager.fetchResultがnilになる場合にクラッシュするのでその事象を回避する
+                if mediaManager.fetchResult != nil {
+                    let asset = mediaManager.fetchResult[currentlySelectedIndex]
+                    // 📝 Forked by fumiyasac (2019/06/19)
+                    // 現在選択しているアセットを定義する処理をメソッドに切り出す対応
+                    selection = [currentSelection(asset: asset)]
+                } else {
+                    // 📝 Forked by fumiyasac (2019/10/09)
+                    // MEMO: 一番最初に選んだ場合には0番目が表示されているが、選択決定をしている形ではない点に注意
+                }
             }
         } else {
             selection.removeAll()
