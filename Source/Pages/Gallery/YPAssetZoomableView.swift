@@ -24,7 +24,11 @@ final class YPAssetZoomableView: UIScrollView {
     public var videoView = YPVideoView()
     public var squaredZoomScale: CGFloat = 1
     public var minWidth: CGFloat? = YPConfig.library.minWidthForItem
-    
+
+    // 📝 Forked by fumiyasac (2019/10/09)
+    // YPConfig.library.shouldForsureCoodinateRatioの値を利用できるようにする
+    public var shouldForsureCoodinateRatio: Bool = YPConfig.library.shouldForsureCoodinateRatio
+
     fileprivate var currentAsset: PHAsset?
     
     // Image view of the asset for convenience. Can be video preview image view or photo image view.
@@ -127,11 +131,27 @@ final class YPAssetZoomableView: UIScrollView {
     }
     
     fileprivate func setAssetFrame(`for` view: UIView, with image: UIImage) {
-        // Reseting the previous scale
+
+        // 📝 Forked by fumiyasac (2019/10/09)
+        // YPConfig.library.shouldForsureCoodinateRatioの値によって切り替えができるようにする
+        let targetZoomScale = shouldForsureCoodinateRatio ? resizeForCoodinateRatio(view: view, with: image) : resizeForSquareRatio(view: view, with: image)
+
+        // Centering image view
+        view.center = center
+        centerAssetView()
+        
+        // Setting new scale
+        minimumZoomScale = targetZoomScale
+        self.zoomScale = targetZoomScale
+    }
+
+    // 📝 Forked by fumiyasac (2019/10/09)
+    // シュアリストコーディネート用写真など縦横比が4:3の場合におけるリサイズ処理
+    fileprivate func resizeForCoodinateRatio(view: UIView, with image: UIImage) -> CGFloat {
+
         self.minimumZoomScale = 1
         self.zoomScale = 1
-        
-        // Calculating and setting the image view frame depending on screenWidth
+
         let screenWidth: CGFloat = UIScreen.main.bounds.width
         let w = image.size.width
         let h = image.size.height
@@ -139,31 +159,71 @@ final class YPAssetZoomableView: UIScrollView {
         var aspectRatio: CGFloat = 1
         var zoomScale: CGFloat = 1
 
-        if w > h { // Landscape
-            aspectRatio = h / w
+        // 📝 Forked by fumiyasac (2019/10/09)
+        // 切り取りエリアの縦横比を4:3へ変更したことに伴う調整対応
+        let heightRatioPrameter: CGFloat = 1.333
+
+        // MEMO: Case1. 横向き画像を読み込んだ場合の調整対応
+        if w > h {
+            aspectRatio = h / w  * heightRatioPrameter
             view.frame.size.width = screenWidth
             view.frame.size.height = screenWidth * aspectRatio
-        } else if h > w { // Portrait
+
+        // MEMO: Case2. 縦向き画像を読み込んだ場合の調整対応
+        } else if h > w {
             aspectRatio = w / h
             view.frame.size.width = screenWidth * aspectRatio
             view.frame.size.height = screenWidth
+            if let minWidth = minWidth {
+                let k = minWidth / screenWidth
+                zoomScale = (h / w) * k * heightRatioPrameter
+            }
+
+        // MEMO: Case3. 正方形画像を読み込んだ場合の調整対応
+        } else {
+            view.frame.size.width = screenWidth
+            view.frame.size.height = screenWidth
+            zoomScale = heightRatioPrameter
+        }
+        return zoomScale
+    }
+
+    // 📝 Forked by fumiyasac (2019/10/09)
+    // プロフィール写真など縦横比が1:1の場合におけるリサイズ処理
+    fileprivate func resizeForSquareRatio(view: UIView, with image: UIImage) -> CGFloat {
+
+        self.minimumZoomScale = 1
+        self.zoomScale = 1
+        
+        let screenWidth: CGFloat = UIScreen.main.bounds.width
+        let w = image.size.width
+        let h = image.size.height
+        
+        var aspectRatio: CGFloat = 1
+        var zoomScale: CGFloat = 1
+
+        // MEMO: Case1. 横向き画像を読み込んだ場合の調整対応
+        if w > h {
+            aspectRatio = h / w
+            view.frame.size.width = screenWidth
+            view.frame.size.height = screenWidth * aspectRatio
             
+        // MEMO: Case2. 縦向き画像を読み込んだ場合の調整対応
+        } else if h > w {
+            aspectRatio = w / h
+            view.frame.size.width = screenWidth * aspectRatio
+            view.frame.size.height = screenWidth
             if let minWidth = minWidth {
                 let k = minWidth / screenWidth
                 zoomScale = (h / w) * k
             }
-        } else { // Square
+            
+        // MEMO: Case3. 正方形画像を読み込んだ場合の調整対応
+        } else {
             view.frame.size.width = screenWidth
             view.frame.size.height = screenWidth
         }
-        
-        // Centering image view
-        view.center = center
-        centerAssetView()
-        
-        // Setting new scale
-        minimumZoomScale = zoomScale
-        self.zoomScale = zoomScale
+        return zoomScale
     }
     
     /// Calculate zoom scale which will fit the image to square

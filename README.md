@@ -4,6 +4,29 @@
 
 ## MEMO
 
++ 2019.10.10
+
+今回の開発で新たな機能とバグ修正への対応を実施しました。
+
+1. 複数選択モード時でカメラロールの利用許可ダイアログ表示時にクラッシュする事象への対応
+2. 切り取りエリアの縦横比を1:1または3:4の2パターンを選択できるように対応
+
+__Configuration Example__
+
+```swift
+// UseCase1: 1枚ずつの画像を設定する & 縦横比は1:1
+config.library.minNumberOfItems = 1
+config.library.maxNumberOfItems = 1
+config.library.forceMultipleSelect = false
+config.library.shouldForsureCoodinateRatio = false
+
+// UseCase2: 最大4枚の画像を設定する & 縦横比は3:4
+config.library.minNumberOfItems = 1
+config.library.maxNumberOfItems = 4
+config.library.forceMultipleSelect = true
+config.library.shouldForsureCoodinateRatio = true
+```
+
 + 2019.06.19
 
 強制的に画像を複数選択できるモードをONにする`forceMultipleSelect`をForkして追加しました。（※ 画像選択のみこのモードが有効になります！）
