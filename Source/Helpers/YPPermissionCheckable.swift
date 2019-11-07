@@ -38,6 +38,9 @@ extension YPPermissionCheckable where Self: UIViewController {
             let alert = popup.popup(cancelBlock: {
                 block(false)
             })
+            if #available(iOS 13.0, *) {
+                alert.modalPresentationStyle = .fullScreen
+            }
             present(alert, animated: true, completion: nil)
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video, completionHandler: { granted in
@@ -45,6 +48,8 @@ extension YPPermissionCheckable where Self: UIViewController {
                     block(granted)
                 }
             })
+        @unknown default:
+            fatalError()
         }
     }
 }

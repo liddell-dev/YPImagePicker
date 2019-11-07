@@ -55,6 +55,9 @@ class ExampleViewController: UIViewController {
                 g.dismiss(animated: true, completion: nil)
             }
             let navC = UINavigationController(rootViewController: gallery)
+            if #available(iOS 13.0, *) {
+                navC.modalPresentationStyle = .fullScreen
+            }
             self.present(navC, animated: true, completion: nil)
         } else {
             print("No items selected yet.")
@@ -238,6 +241,9 @@ class ExampleViewController: UIViewController {
                     playerVC.player = player
                 
                     picker.dismiss(animated: true, completion: { [weak self] in
+                        if #available(iOS 13.0, *) {
+                            playerVC.modalPresentationStyle = .fullScreen
+                        }
                         self?.present(playerVC, animated: true, completion: nil)
                         print("😀 \(String(describing: self?.resolutionForLocalVideo(url: assetURL)!))")
                     })
@@ -269,7 +275,9 @@ class ExampleViewController: UIViewController {
         //        print("😀 \(String(describing: self?.resolutionForLocalVideo(url: assetURL)!))")
         //    })
         //}
-
+        if #available(iOS 13.0, *) {
+            picker.modalPresentationStyle = .fullScreen
+        }
         present(picker, animated: true, completion: nil)
     }
 }
