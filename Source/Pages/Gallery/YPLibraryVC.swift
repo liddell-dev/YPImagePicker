@@ -309,6 +309,9 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             let alert = popup.popup(cancelBlock: {
                 block(false)
             })
+            if #available(iOS 13.0, *) {
+                alert.modalPresentationStyle = .fullScreen
+            }
             present(alert, animated: true, completion: nil)
         case .notDetermined:
             // Show permission popup and get new status
@@ -407,6 +410,9 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         if tooLong || tooShort {
             DispatchQueue.main.async {
                 let alert = tooLong ? YPAlert.videoTooLongAlert(self.view) : YPAlert.videoTooShortAlert(self.view)
+                if #available(iOS 13.0, *) {
+                    alert.modalPresentationStyle = .fullScreen
+                }
                 self.present(alert, animated: true, completion: nil)
             }
             return false
